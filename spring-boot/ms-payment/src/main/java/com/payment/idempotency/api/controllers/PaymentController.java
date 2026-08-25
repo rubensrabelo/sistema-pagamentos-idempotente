@@ -1,5 +1,6 @@
 package com.payment.idempotency.api.controllers;
 
+import com.payment.idempotency.api.docs.PaymentControllerDoc;
 import com.payment.idempotency.application.dtos.PaymentRequest;
 import com.payment.idempotency.application.dtos.PaymentResponse;
 import com.payment.idempotency.application.services.PaymentService;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/payments")
-public class PaymentController {
+public class PaymentController implements PaymentControllerDoc {
 
     private final PaymentService paymentService;
 
@@ -17,10 +18,11 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
+    @Override
     @PostMapping
     public ResponseEntity<?> createPayment(
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey,
-            @RequestBody PaymentRequest request) {
+            @org.springframework.web.bind.annotation.RequestBody PaymentRequest request) {
 
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             return ResponseEntity
