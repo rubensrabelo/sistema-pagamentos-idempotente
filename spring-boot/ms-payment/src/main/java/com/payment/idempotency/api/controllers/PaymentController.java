@@ -4,6 +4,7 @@ import com.payment.idempotency.api.docs.PaymentControllerDoc;
 import com.payment.idempotency.application.dtos.PaymentRequest;
 import com.payment.idempotency.application.dtos.PaymentResponse;
 import com.payment.idempotency.application.services.PaymentService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class PaymentController implements PaymentControllerDoc {
     @PostMapping
     public ResponseEntity<?> createPayment(
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey,
-            @org.springframework.web.bind.annotation.RequestBody PaymentRequest request) {
+            @Valid @RequestBody PaymentRequest request) {
 
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             return ResponseEntity
