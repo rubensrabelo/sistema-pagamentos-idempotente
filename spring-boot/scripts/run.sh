@@ -2,7 +2,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-PAYMENT_DIR="$ROOT_DIR/idempotent-payment-system"
+PAYMENT_DIR="$ROOT_DIR/ms-payment"
 
 if [ -f "$PAYMENT_DIR/.env" ]; then
     echo "Carregando variaveis de ambiente do .env..."

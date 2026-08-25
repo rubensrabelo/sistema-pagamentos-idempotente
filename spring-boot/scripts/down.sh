@@ -2,7 +2,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-PAYMENT_DIR="$ROOT_DIR/idempotent-payment-system"
+PAYMENT_DIR="$ROOT_DIR/ms-payment"
 
 echo "Parando e removendo containers do MasterSys..."
 if [ -d "$PAYMENT_DIR" ]; then
