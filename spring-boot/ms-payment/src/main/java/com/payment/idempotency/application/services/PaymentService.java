@@ -6,6 +6,7 @@ import com.payment.idempotency.application.mappers.PaymentMapper;
 import com.payment.idempotency.domain.Payment;
 import com.payment.idempotency.domain.PaymentAuditLog;
 import com.payment.idempotency.domain.enums.PaymentStatus;
+import com.payment.idempotency.exceptions.domain.PaymentConflictException;
 import com.payment.idempotency.infra.repositories.PaymentAuditLogRepository;
 import com.payment.idempotency.infra.repositories.PaymentRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -51,7 +52,7 @@ public class PaymentService {
 
         } catch (DataIntegrityViolationException ex) {
             Payment raceConditionPayment = paymentRepository.findByIdempotencyKey(idempotencyKey)
-                    .orElseThrow(() -> new IllegalStateException("Conflict detected but transaction data not found."));
+                    .orElseThrow(() -> new PaymentConflictException("Conflict detected but transaction data not found."));
             
             saveAuditLog(raceConditionPayment, idempotencyKey, "RACE_CONDITION_BLOCKED", request.toString(), "Concurrent request blocked");
             return paymentMapper.toResponse(raceConditionPayment);
