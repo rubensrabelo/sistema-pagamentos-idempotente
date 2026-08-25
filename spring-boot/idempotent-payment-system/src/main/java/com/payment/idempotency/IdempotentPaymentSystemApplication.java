@@ -1,4 +1,4 @@
-package com.payment.idempotent_payment_system;
+package com.payment.idempotency;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
