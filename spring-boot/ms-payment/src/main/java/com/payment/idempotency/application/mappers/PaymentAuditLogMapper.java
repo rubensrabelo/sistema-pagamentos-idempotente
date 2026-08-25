@@ -13,7 +13,7 @@ public class PaymentAuditLogMapper {
         }
         return new PaymentAuditLogResponse(
                 auditLog.getId(),
-                auditLog.getPayment() != null ? auditLog.getPayment().getId() : null,
+                auditLog.getPayment() != null ? auditLog.getPaymentId() : null,
                 auditLog.getIdempotencyKey(),
                 auditLog.getStatusTransition(),
                 auditLog.getRequestPayload(),

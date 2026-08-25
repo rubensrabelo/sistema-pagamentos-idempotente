@@ -40,4 +40,8 @@ public class PaymentAuditLog {
     protected void onCreate() {
         this.attemptedAt = LocalDateTime.now();
     }
+
+    public Long getPaymentId() {
+        return payment.getId();
+    }
 }
