@@ -24,9 +24,9 @@ public class PaymentService {
     private final PaymentAuditLogRepository auditLogRepository;
     private final PaymentMapper paymentMapper;
 
-    public PaymentService(PaymentRepository paymentRepository, 
-                          PaymentAuditLogRepository auditLogRepository, 
-                          PaymentMapper paymentMapper) {
+    public PaymentService(PaymentRepository paymentRepository,
+            PaymentAuditLogRepository auditLogRepository,
+            PaymentMapper paymentMapper) {
         this.paymentRepository = paymentRepository;
         this.auditLogRepository = auditLogRepository;
         this.paymentMapper = paymentMapper;
@@ -34,13 +34,14 @@ public class PaymentService {
 
     public PaymentResponse processPayment(String idempotencyKey, PaymentRequest request) {
         Optional<Payment> existing = paymentRepository.findByIdempotencyKey(idempotencyKey);
-        
+
         if (existing.isPresent()) {
             Payment payment = existing.get();
             if (payment.getStatus() == PaymentStatus.PENDING) {
                 throw new PaymentProcessingException("This payment is already being processed. Please wait.");
             }
-            saveAuditLog(payment, idempotencyKey, "DUPLICATE_REQUEST_DETECTED", request.toString(), "Payment already finalized");
+            saveAuditLog(payment, idempotencyKey, "DUPLICATE_REQUEST_DETECTED", request.toString(),
+                    "Payment already finalized");
             return paymentMapper.toResponse(payment);
         }
 
@@ -49,13 +50,15 @@ public class PaymentService {
             payment = registerInitialPayment(idempotencyKey, request);
         } catch (DataIntegrityViolationException ex) {
             Payment raceConditionPayment = paymentRepository.findByIdempotencyKeyForUpdate(idempotencyKey)
-                    .orElseThrow(() -> new PaymentConflictException("Conflict detected but transaction data not found."));
-            
+                    .orElseThrow(
+                            () -> new PaymentConflictException("Conflict detected but transaction data not found."));
+
             if (raceConditionPayment.getStatus() == PaymentStatus.PENDING) {
                 throw new PaymentProcessingException("Concurrent execution detected. Transaction in progress.");
             }
-            
-            saveAuditLog(raceConditionPayment, idempotencyKey, "RACE_CONDITION_BLOCKED", request.toString(), "Concurrent request blocked");
+
+            saveAuditLog(raceConditionPayment, idempotencyKey, "RACE_CONDITION_BLOCKED", request.toString(),
+                    "Concurrent request blocked");
             return paymentMapper.toResponse(raceConditionPayment);
         }
 
@@ -72,7 +75,7 @@ public class PaymentService {
 
     private PaymentStatus executeExternalGatewayCall(PaymentRequest request) {
         try {
-            Thread.sleep(2000); 
+            Thread.sleep(2000);
             return PaymentStatus.SUCCESS;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -84,11 +87,12 @@ public class PaymentService {
     public PaymentResponse finalizePayment(Long id, PaymentStatus status, String requestPayload) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new PaymentConflictException("Payment record lost during lifecycle"));
-        
+
         payment.setStatus(status);
         payment = paymentRepository.save(payment);
 
-        saveAuditLog(payment, payment.getIdempotencyKey(), "PAYMENT_FINALIZED_" + status.name(), requestPayload, "Gateway call finished");
+        saveAuditLog(payment, payment.getIdempotencyKey(), "PAYMENT_FINALIZED_" + status.name(), requestPayload,
+                "Gateway call finished");
         return paymentMapper.toResponse(payment);
     }
 
