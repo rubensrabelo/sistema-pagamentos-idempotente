@@ -12,5 +12,15 @@ services:
       - postgres_payment_data:/var/lib/postgresql
     restart: unless-stopped
 
+  redis:
+    image: redis:8.10-alpine
+    container_name: payment_redis_cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_payment_data:/data
+    restart: unless-stopped
+
 volumes:
   postgres_payment_data:
+  redis_payment_data:
