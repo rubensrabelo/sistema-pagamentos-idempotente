@@ -1,5 +1,7 @@
 package com.payment.idempotency.application.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.payment.idempotency.application.dtos.PaymentQueueMessage;
 import com.payment.idempotency.application.dtos.PaymentRequest;
 import com.payment.idempotency.application.dtos.PaymentResponse;
 import com.payment.idempotency.application.mappers.PaymentMapper;
@@ -10,13 +12,14 @@ import com.payment.idempotency.exceptions.domain.PaymentConflictException;
 import com.payment.idempotency.exceptions.domain.PaymentProcessingException;
 import com.payment.idempotency.infra.repositories.PaymentAuditLogRepository;
 import com.payment.idempotency.infra.repositories.PaymentRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,15 +30,21 @@ public class PaymentService {
     private final PaymentAuditLogRepository auditLogRepository;
     private final PaymentMapper paymentMapper;
     private final StringRedisTemplate redisTemplate;
+    private final ChannelTopic paymentTopic;
+    private final ObjectMapper objectMapper;
 
     public PaymentService(PaymentRepository paymentRepository,
                           PaymentAuditLogRepository auditLogRepository,
                           PaymentMapper paymentMapper,
-                          StringRedisTemplate redisTemplate) {
+                          StringRedisTemplate redisTemplate,
+                          ChannelTopic paymentTopic,
+                          ObjectMapper objectMapper) {
         this.paymentRepository = paymentRepository;
         this.auditLogRepository = auditLogRepository;
         this.paymentMapper = paymentMapper;
         this.redisTemplate = redisTemplate;
+        this.paymentTopic = paymentTopic;
+        this.objectMapper = objectMapper;
     }
 
     public PaymentResponse processPayment(String idempotencyKey, PaymentRequest request) {
@@ -55,31 +64,33 @@ public class PaymentService {
             return paymentMapper.toResponse(existingPayment);
         }
 
-        Payment payment;
-        try {
-            payment = registerInitialPayment(idempotencyKey, request);
-        } catch (DataIntegrityViolationException ex) {
-            String finalDbStatus = redisTemplate.opsForValue().get(idempotencyKey);
-            if ("PROCESSING".equals(finalDbStatus)) {
-                Payment raceConditionPayment = paymentRepository.findByIdempotencyKeyForUpdate(idempotencyKey)
-                        .orElseThrow(() -> new PaymentConflictException("Conflict detected but transaction data not found."));
-
-                if (raceConditionPayment.getStatus() == PaymentStatus.PENDING) {
-                    throw new PaymentProcessingException("Concurrent execution detected. Transaction in progress.");
-                }
-
-                saveAuditLog(raceConditionPayment, idempotencyKey, "RACE_CONDITION_BLOCKED", request.toString(), "Concurrent request blocked");
-                return paymentMapper.toResponse(raceConditionPayment);
-            }
-            
-            Payment finishedPayment = paymentRepository.findByIdempotencyKey(idempotencyKey)
-                    .orElseThrow(() -> new PaymentConflictException("Payment record lost."));
-            return paymentMapper.toResponse(finishedPayment);
+        Optional<Payment> existing = paymentRepository.findByIdempotencyKey(idempotencyKey);
+        if (existing.isPresent()) {
+            Payment payment = existing.get();
+            redisTemplate.opsForValue().set(idempotencyKey, payment.getStatus().name(), Duration.ofHours(24));
+            return paymentMapper.toResponse(payment);
         }
 
-        PaymentStatus finalStatus = executeExternalGatewayCall(request);
+        try {
+            PaymentQueueMessage queueMessage = new PaymentQueueMessage(idempotencyKey, request.amount());
+            String jsonMessage = objectMapper.writeValueAsString(queueMessage);
+            redisTemplate.convertAndSend(paymentTopic.getTopic(), jsonMessage);
+        } catch (Exception ex) {
+            redisTemplate.delete(idempotencyKey);
+            throw new PaymentProcessingException("Failed to queue transaction.");
+        }
 
-        return finalizePayment(payment.getId(), finalStatus, request.toString(), idempotencyKey);
+        return new PaymentResponse(UUID.randomUUID(), idempotencyKey, request.amount(), "PROCESSING", LocalDateTime.now());
+    }
+
+    @Transactional
+    public void executeAsynchronousPersistence(String idempotencyKey, PaymentRequest request) {
+        Optional<Payment> dbCheck = paymentRepository.findByIdempotencyKey(idempotencyKey);
+        if (dbCheck.isPresent()) return;
+
+        Payment payment = registerInitialPayment(idempotencyKey, request);
+        PaymentStatus finalStatus = executeExternalGatewayCall(request);
+        finalizePayment(payment.getId(), finalStatus, request.toString(), idempotencyKey);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -90,7 +101,7 @@ public class PaymentService {
 
     private PaymentStatus executeExternalGatewayCall(PaymentRequest request) {
         try {
-            Thread.sleep(2000);
+            Thread.sleep(100); 
             return PaymentStatus.SUCCESS;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -99,17 +110,15 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentResponse finalizePayment(UUID id, PaymentStatus status, String requestPayload, String idempotencyKey) {
-        Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new PaymentConflictException("Payment record lost during lifecycle"));
+    public void finalizePayment(UUID id, PaymentStatus status, String requestPayload, String idempotencyKey) {
+        Payment payment = paymentRepository.findById(id).orElse(null);
+        if (payment == null) return;
 
         payment.setStatus(status);
-        payment = paymentRepository.save(payment);
+        paymentRepository.save(payment);
 
         redisTemplate.opsForValue().set(idempotencyKey, status.name(), Duration.ofHours(24));
-
         saveAuditLog(payment, payment.getIdempotencyKey(), "PAYMENT_FINALIZED_" + status.name(), requestPayload, "Gateway call finished");
-        return paymentMapper.toResponse(payment);
     }
 
     private void saveAuditLog(Payment payment, String key, String transition, String requestBody, String responseBody) {
