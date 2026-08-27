@@ -1,14 +1,13 @@
-# Sistema de Pagamentos Idempotente
-
-Um serviço baseado em Spring Boot projetado para processar transações financeiras seguras através de cont# Sistema de Pagamentos Idempotente Multilinguagem
+# Sistema de Pagamentos Idempotente Multilinguagem
 
 Este repositorio abriga um ecossistema distribuido voltado para o processamento de transacoes financeiras seguras com controle estrito de idempotencia e resiliencia sob alta carga. O projeto foi desenhado sob uma abordagem poliglota para comparar e demonstrar a eficiencia de diferentes paradigmas de desenvolvimento.
 
 ## Estrutura do Repositorio
 
 *   `/spring-boot`: Microsservico desenvolvido em Java 21 e Spring Boot 3.x utilizando arquitetura assincrona de alta vazao baseada em filas em memoria.
-*   `/go-app`: Microsservico desenvolvido em Go (Golang) com foco em processamento nativo concorrente de baixa latencia utilizando goroutines.
+*   `/go-app`: Microsservico planejado em Go (Golang) com foco em processamento nativo concorrente de baixa latencia utilizando goroutines (Aguardando inicializacao pos-leitura tecnica).
 *   `/performance-tests`: Suite de testes de carga e estresse utilizando Grafana k6 e relatorios historicos de evolucao de infraestrutura.
+*   `/docs`: Documentacao complementar, analises arquiteturais e referencias teoricas de engenharia financeira.
 
 ## Stack Tecnologica Global
 
@@ -17,6 +16,20 @@ Este repositorio abriga um ecossistema distribuido voltado para o processamento 
 *   PostgreSQL 18 (Armazenamento Relacional ACID)
 *   Redis 8.10 (Escudo de Idempotencia e Fila Assincrona)
 *   Grafana k6 (Engenharia de Performance)
+
+## Principios Centrais da Arquitetura
+
+### 1. Idempotency Key como Chave Unica
+O cliente deve enviar uma chave unica por operacao. O sistema aplica uma restricao de unicidade nessa chave no banco de dados para evitar o reprocessamento de novas chamadas.
+
+### 2. Transacoes Atomicas
+Validar, registrar e coordenar a execucao com parceiros externos devem viver na mesma transacao atomica. Uma falha no meio do caminho causa um rollback completo, evitando o estado indefinido.
+
+### 3. Estrategia de Auditoria
+Cada tentativa e registrada como um evento imutavel. O estado atual serve como uma protecao do log, garantindo um historico limpo das alteracoes.
+
+### 4. Protecao contra Condicoes de Corrida
+O fluxo evita o padrao de checar a existencia e depois inserir em passos separados. Sao usadas operacoes seguras de banco de dados para eliminar a brecha entre a verificacao e a escrita.
 
 ## Fluxo Macroscopico de Idempotencia
 
@@ -42,27 +55,13 @@ sequenceDiagram
         API-->>Cliente: Responde 201 Created (Status: PROCESSING)
     end
 ```
-role estrito de idempotência e concorrência. Ele garante que qualquer reles ou requisição idêntica seja executada exatamente uma vez, evitando cobranças duplicadas e inconsistências de dados.
 
-## Stack Tecnológica
+## Status do Desenvolvimento Poliglota
 
-* Java
-* Spring Boot
-* PostgreSQL (Transações)
-* Idempotency Keys (Chaves de Idempotência)
-* Locks & Constraints de Banco de Dados
-* Log de Auditoria
+### Modulo Java (Spring Boot)
+*   **Status:** Concluido e 100% Validado.
+*   **Caracteristicas:** Implementacao completa do padrao Write-Behind utilizando Redis como mensageria interna para blindar o PostgreSQL 18. Suporta cargas de estresse de 10.000 usuarios simultaneos atingindo vazao superior a 1.000 requisições por segundo nos testes de carga locais.
 
-## Princípios Centrais da Arquitetura
-
-### 1. Idempotency Key como Chave Única
-O cliente deve enviar uma chave única por operação. O sistema aplica uma restrição de unicidade nessa chave no banco de dados para evitar o reprocessamento de novas chamadas.
-
-### 2. Transações Atômicas
-Validar, registrar e coordenar a execução com parceiros externos devem viver na mesma transação atômica. Uma falha no meio do caminho causa um rollback completo, evitando o estado indefinido.
-
-### 3. Estratégia de Auditoria
-Cada tentativa é registrada como um evento imutável. O estado atual serve como uma proteção do log, garantindo um histórico limpo das alterações.
-
-### 4. Proteção contra Condições de Corrida
-O fluxo evita o padrão de checar a existência e depois inserir em passos separados. São usadas operações seguras de banco de dados para eliminar a brecha entre a verificação e a escrita.
+### Modulo Go (Golang)
+*   **Status:** Em Fase de Planejamento Estreito.
+*   **Estrategia:** A implementacao prática deste modulo sera iniciada imediatamente apos a conclusao do ciclo completo de leituras, anotacoes e estudos dirigidos mapeados no arquivo de diretrizes localizado em `docs/REFERENCES-PAYMENT.md`. O objetivo e absorver os padroes de mercado da Stripe, Adyen e Wise antes de desenhar os componentes concorrentes nativos em Go.
