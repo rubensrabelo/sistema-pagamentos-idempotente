@@ -55,35 +55,26 @@ public class PaymentService {
             return paymentMapper.toResponse(existingPayment);
         }
 
-        Optional<Payment> existing = paymentRepository.findByIdempotencyKey(idempotencyKey);
-
-        if (existing.isPresent()) {
-            Payment payment = existing.get();
-            redisTemplate.opsForValue().set(idempotencyKey, payment.getStatus().name(), Duration.ofHours(24));
-            if (payment.getStatus() == PaymentStatus.PENDING) {
-                throw new PaymentProcessingException("This payment is already being processed. Please wait.");
-            }
-            saveAuditLog(payment, idempotencyKey, "DUPLICATE_REQUEST_DETECTED", request.toString(),
-                    "Payment already finalized");
-            return paymentMapper.toResponse(payment);
-        }
-
         Payment payment;
         try {
             payment = registerInitialPayment(idempotencyKey, request);
         } catch (DataIntegrityViolationException ex) {
-            redisTemplate.delete(idempotencyKey);
-            Payment raceConditionPayment = paymentRepository.findByIdempotencyKeyForUpdate(idempotencyKey)
-                    .orElseThrow(
-                            () -> new PaymentConflictException("Conflict detected but transaction data not found."));
+            String finalDbStatus = redisTemplate.opsForValue().get(idempotencyKey);
+            if ("PROCESSING".equals(finalDbStatus)) {
+                Payment raceConditionPayment = paymentRepository.findByIdempotencyKeyForUpdate(idempotencyKey)
+                        .orElseThrow(() -> new PaymentConflictException("Conflict detected but transaction data not found."));
 
-            if (raceConditionPayment.getStatus() == PaymentStatus.PENDING) {
-                throw new PaymentProcessingException("Concurrent execution detected. Transaction in progress.");
+                if (raceConditionPayment.getStatus() == PaymentStatus.PENDING) {
+                    throw new PaymentProcessingException("Concurrent execution detected. Transaction in progress.");
+                }
+
+                saveAuditLog(raceConditionPayment, idempotencyKey, "RACE_CONDITION_BLOCKED", request.toString(), "Concurrent request blocked");
+                return paymentMapper.toResponse(raceConditionPayment);
             }
-
-            saveAuditLog(raceConditionPayment, idempotencyKey, "RACE_CONDITION_BLOCKED", request.toString(),
-                    "Concurrent request blocked");
-            return paymentMapper.toResponse(raceConditionPayment);
+            
+            Payment finishedPayment = paymentRepository.findByIdempotencyKey(idempotencyKey)
+                    .orElseThrow(() -> new PaymentConflictException("Payment record lost."));
+            return paymentMapper.toResponse(finishedPayment);
         }
 
         PaymentStatus finalStatus = executeExternalGatewayCall(request);
@@ -117,8 +108,7 @@ public class PaymentService {
 
         redisTemplate.opsForValue().set(idempotencyKey, status.name(), Duration.ofHours(24));
 
-        saveAuditLog(payment, payment.getIdempotencyKey(), "PAYMENT_FINALIZED_" + status.name(), requestPayload,
-                "Gateway call finished");
+        saveAuditLog(payment, payment.getIdempotencyKey(), "PAYMENT_FINALIZED_" + status.name(), requestPayload, "Gateway call finished");
         return paymentMapper.toResponse(payment);
     }
 
