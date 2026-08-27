@@ -7,6 +7,10 @@ spring:
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 100
+      minimum-idle: 20
+      connection-timeout: 5000
 
   jpa:
     hibernate:
@@ -24,3 +28,7 @@ server:
   port: 8080
   servlet:
     context-path: /api/v1
+  tomcat:
+    threads:
+      max: 1000 
+      min-spare: 50
