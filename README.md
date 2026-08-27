@@ -1,6 +1,48 @@
 # Sistema de Pagamentos Idempotente
 
-Um serviço baseado em Spring Boot projetado para processar transações financeiras seguras através de controle estrito de idempotência e concorrência. Ele garante que qualquer reles ou requisição idêntica seja executada exatamente uma vez, evitando cobranças duplicadas e inconsistências de dados.
+Um serviço baseado em Spring Boot projetado para processar transações financeiras seguras através de cont# Sistema de Pagamentos Idempotente Multilinguagem
+
+Este repositorio abriga um ecossistema distribuido voltado para o processamento de transacoes financeiras seguras com controle estrito de idempotencia e resiliencia sob alta carga. O projeto foi desenhado sob uma abordagem poliglota para comparar e demonstrar a eficiencia de diferentes paradigmas de desenvolvimento.
+
+## Estrutura do Repositorio
+
+*   `/spring-boot`: Microsservico desenvolvido em Java 21 e Spring Boot 3.x utilizando arquitetura assincrona de alta vazao baseada em filas em memoria.
+*   `/go-app`: Microsservico desenvolvido em Go (Golang) com foco em processamento nativo concorrente de baixa latencia utilizando goroutines.
+*   `/performance-tests`: Suite de testes de carga e estresse utilizando Grafana k6 e relatorios historicos de evolucao de infraestrutura.
+
+## Stack Tecnologica Global
+
+*   Java 21 / Spring Boot 3.x
+*   Go (Golang)
+*   PostgreSQL 18 (Armazenamento Relacional ACID)
+*   Redis 8.10 (Escudo de Idempotencia e Fila Assincrona)
+*   Grafana k6 (Engenharia de Performance)
+
+## Fluxo Macroscopico de Idempotencia
+
+```mermaid
+sequenceDiagram
+    autonumber
+    Actor Cliente
+    Participant API as API Gateway / App
+    Participant Cache as Redis 8.10 (RAM)
+    Participant DB as PostgreSQL 18 (Disco)
+
+    Cliente->>API: POST /payments (X-Idempotency-Key)
+    API->>Cache: SETNX key "PROCESSING" (TTL 24h)
+    
+    alt Chave ja existente (Concorrencia ou Duplicidade)
+        Cache-->>API: Retorna FALSO
+        API->>DB: Busca registro financeiro existente
+        DB-->>API: Dados da transacao
+        API-->>Cliente: Retorna resposta clonada idonca
+    else Chave Inedita (Sucesso)
+        Cache-->>API: Retorna VERDADEIRO
+        API->>Cache: Enfileira mensagem de persistencia
+        API-->>Cliente: Responde 201 Created (Status: PROCESSING)
+    end
+```
+role estrito de idempotência e concorrência. Ele garante que qualquer reles ou requisição idêntica seja executada exatamente uma vez, evitando cobranças duplicadas e inconsistências de dados.
 
 ## Stack Tecnológica
 
