@@ -49,14 +49,16 @@ class PaymentServiceUnitTest {
     private PaymentRequest paymentRequest;
     private Payment mockPayment;
     private PaymentResponse mockResponse;
+    private UUID mockPaymentId;
 
     @BeforeEach
     void setUp() {
         idempotencyKey = UUID.randomUUID().toString();
+        mockPaymentId = UUID.randomUUID();
         paymentRequest = new PaymentRequest(new BigDecimal("100.00"));
         
         mockPayment = Payment.builder()
-                .id(1L)
+                .id(mockPaymentId)
                 .idempotencyKey(idempotencyKey)
                 .amount(new BigDecimal("100.00"))
                 .status(PaymentStatus.PENDING)
@@ -64,7 +66,7 @@ class PaymentServiceUnitTest {
                 .build();
 
         mockResponse = new PaymentResponse(
-                1L,
+                mockPaymentId,
                 idempotencyKey,
                 new BigDecimal("100.00"),
                 "SUCCESS",
@@ -77,7 +79,7 @@ class PaymentServiceUnitTest {
         when(paymentRepository.findByIdempotencyKey(idempotencyKey)).thenReturn(Optional.empty());
         when(paymentMapper.toEntity(paymentRequest, idempotencyKey)).thenReturn(mockPayment);
         when(paymentRepository.saveAndFlush(mockPayment)).thenReturn(mockPayment);
-        when(paymentRepository.findById(1L)).thenReturn(Optional.of(mockPayment));
+        when(paymentRepository.findById(mockPaymentId)).thenReturn(Optional.of(mockPayment));
         when(paymentRepository.save(mockPayment)).thenReturn(mockPayment);
         when(paymentMapper.toResponse(mockPayment)).thenReturn(mockResponse);
 

@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class PaymentService {
@@ -84,7 +85,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentResponse finalizePayment(Long id, PaymentStatus status, String requestPayload) {
+    public PaymentResponse finalizePayment(UUID id, PaymentStatus status, String requestPayload) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new PaymentConflictException("Payment record lost during lifecycle"));
 

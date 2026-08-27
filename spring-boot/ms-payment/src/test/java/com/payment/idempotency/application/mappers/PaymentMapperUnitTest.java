@@ -33,8 +33,10 @@ class PaymentMapperUnitTest {
     void unitTest_ShouldMapPaymentEntityToPaymentResponseRecord() {
         String key = UUID.randomUUID().toString();
         LocalDateTime now = LocalDateTime.now();
+        UUID paymentId = UUID.randomUUID();
+        
         Payment entity = Payment.builder()
-                .id(10L)
+                .id(paymentId)
                 .idempotencyKey(key)
                 .amount(new BigDecimal("500.00"))
                 .status(PaymentStatus.SUCCESS)
@@ -44,7 +46,7 @@ class PaymentMapperUnitTest {
         PaymentResponse response = paymentMapper.toResponse(entity);
 
         assertNotNull(response);
-        assertEquals(10L, response.id());
+        assertEquals(paymentId, response.id());
         assertEquals(key, response.idempotencyKey());
         assertEquals(new BigDecimal("500.00"), response.amount());
         assertEquals("SUCCESS", response.status());

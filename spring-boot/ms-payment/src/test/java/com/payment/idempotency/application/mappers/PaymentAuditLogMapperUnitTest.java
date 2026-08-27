@@ -18,10 +18,13 @@ class PaymentAuditLogMapperUnitTest {
     void unitTest_ShouldMapPaymentAuditLogToResponseRecord() {
         String key = UUID.randomUUID().toString();
         LocalDateTime now = LocalDateTime.now();
-        Payment payment = Payment.builder().id(10L).build();
+        UUID auditLogId = UUID.randomUUID();
+        UUID paymentId = UUID.randomUUID();
+        
+        Payment payment = Payment.builder().id(paymentId).build();
         
         PaymentAuditLog auditLog = PaymentAuditLog.builder()
-                .id(1L)
+                .id(auditLogId)
                 .payment(payment)
                 .idempotencyKey(key)
                 .statusTransition("PAYMENT_SUCCESS")
@@ -33,8 +36,8 @@ class PaymentAuditLogMapperUnitTest {
         PaymentAuditLogResponse response = auditLogMapper.toResponse(auditLog);
 
         assertNotNull(response);
-        assertEquals(1L, response.id());
-        assertEquals(10L, response.paymentId());
+        assertEquals(auditLogId, response.id());
+        assertEquals(paymentId, response.paymentId());
         assertEquals(key, response.idempotencyKey());
         assertEquals("PAYMENT_SUCCESS", response.statusTransition());
         assertEquals("req", response.requestPayload());

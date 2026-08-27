@@ -1,10 +1,11 @@
 package com.payment.idempotency.application.dtos;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public record PaymentAuditLogResponse(
-    Long id,
-    Long paymentId,
+    UUID id,
+    UUID paymentId,
     String idempotencyKey,
     String statusTransition,
     String requestPayload,

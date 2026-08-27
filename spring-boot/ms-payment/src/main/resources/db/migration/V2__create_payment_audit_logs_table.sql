@@ -1,6 +1,6 @@
 CREATE TABLE payment_audit_logs (
-    id BIGSERIAL PRIMARY KEY,
-    payment_id BIGINT,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    payment_id UUID,
     idempotency_key VARCHAR(255) NOT NULL,
     status_transition VARCHAR(50) NOT NULL,
     request_payload TEXT,

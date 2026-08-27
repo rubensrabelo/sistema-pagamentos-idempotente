@@ -3,6 +3,7 @@ package com.payment.idempotency.domain;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "payment_audit_logs")
@@ -15,7 +16,7 @@ public class PaymentAuditLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_id")
@@ -41,7 +42,7 @@ public class PaymentAuditLog {
         this.attemptedAt = LocalDateTime.now();
     }
 
-    public Long getPaymentId() {
+    public UUID getPaymentId() {
         return payment.getId();
     }
 }
