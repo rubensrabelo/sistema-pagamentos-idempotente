@@ -44,6 +44,22 @@ graph TD
     end
 ```
 
+## Automacao da Infraestrutura Local (Scripts Shell)
+
+O projeto disponibiliza scripts automatizados `.sh` dentro do diretorio de scripts para gerenciar de forma rapida o ciclo de vida dos contêineres Docker (PostgreSQL 18 e Redis 8.10).
+
+### 1. Inicializar e Provisionar o Ambiente
+Para subir os bancos de dados em segundo plano e aplicar as configuracoes de rede locais, execute o script de inicializacao:
+```bash
+./scripts/run-infra.sh
+```
+
+### 2. Destruir e Limpar o Ambiente
+Para encerrar a execucao de todos os servicos locais, remover os contêineres e apagar completamente os volumes de dados residuais do disco, execute o script de destruicao:
+```bash
+./scripts/destroy-infra.sh
+```
+
 ## Como Executar a Suite de Testes do Projeto
 
 Para compilar o projeto e executar todos os testes unitarios e os testes de integracao baseados em contêineres dinâmicos (Testcontainers), certifique-se de que o Docker local está ativo e execute:
