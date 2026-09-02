@@ -24,6 +24,8 @@ public class PaymentQueueConsumer implements MessageListener {
             PaymentQueueMessage queueMessage = objectMapper.readValue(message.getBody(), PaymentQueueMessage.class);
             PaymentRequest request = new PaymentRequest(queueMessage.amount());
             paymentService.executeAsynchronousPersistence(queueMessage.idempotencyKey(), request);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+            // TODO: Implementar logger (ex: log.error) e estratégia de DLQ (Dead Letter Queue) para ambiente de produção
+        }
     }
 }
