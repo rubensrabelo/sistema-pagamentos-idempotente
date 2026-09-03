@@ -1,31 +1,35 @@
-Aqui está o bloco complementar de referências técnicas organizado em ordem de leitura sequencial:
-## 📚 Referências Iniciais de Mercado
+## Referências Iniciais de Mercado
 
-* [Stripe Blog - Designing Robust APIs with Idempotency](https://stripe.com/blog/idempotency): O texto seminal sobre o cabeçalho Idempotency-Key e a estratégia de retenção e cache em arquiteturas financeiras distribuídas.
-* [Medium - How to Design Idempotent APIs Safely](https://medium.com/@mathildaduku/how-to-design-idempotent-apis-safely-what-to-cache-and-what-to-ignore-feb93a16fc00): Diagramas explicativos do fluxo de barramento síncrono e análise detalhada das respostas equivalentes para payloads iguais.
-* [Hub do Desenvolvedor - Idempotência em APIs REST](https://blog.hubdodesenvolvedor.com.br/idempotencia-em-apis-evitar-duplicidade-registros/): Localização dos conceitos conceituais de reprocessamento focados no ecossistema e regulação do PIX no mercado de capitais nacional.
+* [Stripe Blog - Designing Robust APIs with Idempotency](https://stripe.com/blog/idempotency): O texto seminal sobre o cabeçalho Idempotency-Key e a estratégia de retenção e cache em arquiteturas financeiras distribuídas. Essencial para entender como grandes plataformas evitam cobranças duplicadas em ambientes de rede instáveis.
+* [Medium - How to Design Idempotent APIs Safely](https://medium.com/@mathildaduku/how-to-design-idempotent-apis-safely-what-to-cache-and-what-to-ignore-feb93a16fc00): Diagramas explicativos do fluxo de barramento síncrono e análise detalhada das respostas equivalentes para payloads iguais. Importante para compreender o que deve ser armazenado em cache e o que deve ser ignorado no fluxo de requisições.
+* [Hub do Desenvolvedor - Idempotência em APIs REST](https://blog.hubdodesenvolvedor.com.br/idempotencia-em-apis-evitar-duplicidade-registros/): Localização dos conceitos conceituais de reprocessamento focados no ecossistema e regulação do PIX no mercado de capitais nacional. Recomendado para entender a obrigatoriedade da idempotência em cenários financeiros locais e o comportamento dos métodos HTTP.
+* [Alex Xu - System Design Interview Vol. 2 (Capítulo Payment System)](https://blog.bytebytego.com/p/payment-system): Aborda o fluxo macro de transações, comunicação com adquirentes, segurança de alto nível, reconciliação financeira e gerenciamento de estados. Fundamental para obter uma visão sistêmica e holística de como engenharia e contabilidade se unem em produção.
+* Alvaro Duran - The Payments Engineer Playbook: Newsletter e guia prático escrito por um especialista do mercado de pagamentos. Excelente para acompanhar insights detalhados, tendências do setor e arquiteturas reais aplicadas ao processamento de movimentações financeiras.
 
 ------------------------------
-## 🏛️ Engenharia Avançada e Plataformas de Pagamento
+## Engenharia Avançada e Plataformas de Pagamento
 
 * [Medium - Idempotency Strategies for Modern Payment Systems](https://medium.com/javarevisited/idempotency-strategies-for-modern-payment-systems-c285165382f4): Aborda o ciclo contábil, mitigação de timeouts em adquirentes e orquestração de rotinas cron de reconciliação de saldo pendente.
 * [Medium - Building a Payment System with Spring Boot, Stripe, and Redis](https://medium.com/@bharathdayals/building-a-spring-boot-stripe-checkout-redis-idempotency-system-complete-guide-58f063dbb244): Acoplamento entre webhooks assíncronos em tempo real da Stripe e camadas distribuídas de cache atômico.
-* Adyen Docs - API Idempotency in Payment Platforms: Diretiva oficial da Adyen sobre restrição em concorrência de rede de cartões de crédito e regras estritas para capturas parciais.
+* Adyen Docs - API Idempotency in Payment Platforms: Diretiva oficial da Adyen sobre restrição em concorrência de rede de cartões de crédito e regras estritas para capturas parciais. Essencial para entender os mecanismos de controle de concorrência direto na API de uma credenciadora global.
+* [Martin Fowler - Analysis Patterns (Capítulos de Accounting)](https://martinfowler.com/books/ap.html): Estudo clássico sobre os padrões de análise contábil. Essencial para compreender as estruturas de domínio complexas que regem contas, lançamentos e auditorias financeiras.
+* [Martin Fowler - Patterns of Enterprise Application Architecture (Padrão Money)](https://martinfowler.com/eaaCatalog/money.html): Destaca o padrão arquitetural focado no tratamento de valores monetários. Indispensável para aprender a modelar quantias e moedas evitando erros de arredondamento em cálculos matemáticos de ponto flutuante.
+* Modern Treasury - Accounting for Developers (Partes I, II e III): Guia fundamental focado na modelagem de bancos de dados sob o princípio da contabilidade por partida dobrada (double-entry). Essencial para entender como desenhar tabelas imutáveis de transações financeiras (ledgers) sem recorrer a simples alterações diretas de saldo.
 
 ------------------------------
-## 💻 Repositórios e Aplicações Reais no GitHub
+## Repositórios e Aplicações Reais no GitHub
 
-* [zgabrieloliveira / idempotent-payment-gateway](https://github.com/zgabrieloliveira/idempotent-payment-gateway): Arquitetura mínima em Spring Boot 3 e PostgreSQL combinados com Redis para testes em cenários de alta concorrência.
-* [transferwise / idempotence4j](https://github.com/transferwise/idempotence4j): Biblioteca interna e desacoplada desenvolvida pelo time de engenharia da Wise para gerenciamento de travas nativas no Postgres.
-* [NiMv1 / spring-boot-starter-idempotency](https://github.com/NiMv1/spring-boot-starter-idempotency): Implementação extensível baseada em Programação Orientada a Aspectos (AOP) interceptando chamadas HTTP via anotações em Java.
-* [davidgracemann / FlossPay](https://github.com/davidgracemann/FlossPay): Sistema financeiro robusto com foco em livros-razão imutáveis (ledger), auditoria ponta a ponta e barramento de ataques de repetição (replay attacks).
-* [adyen-examples / adyen-step-by-step-integration-workshop](https://github.com/adyen-examples/adyen-step-by-step-integration-workshop): Workshop oficial de integração contendo o tratamento correto para fluxos de processamento financeiro assíncrono.
-* [api-evangelist / agent-readiness](https://github.com/api-evangelist/agent-readiness): Esquemas de auditoria e tempos operacionais de retenção de dados aplicados pelas maiores empresas do mercado global.
+* zgabrieloliveira / idempotent-payment-gateway: Arquitetura mínima em Spring Boot 3 e PostgreSQL combinados com Redis para testes em cenários de alta concorrência. Ideal para ver como implementar chaves de idempotência integradas a travas pessimistas (Pessimistic Locking) no banco de dados.
+* [transferwise / idempotence4j](https://github.com/transferwise/idempotence4j): Biblioteca interna e desacoplada desenvolvida pelo time de engenharia da Wise para gerenciamento de travas nativas no Postgres e MariaDB. Útil para estudar estratégias reais de persistência e tratamento de retries em sistemas globais de transferência.
+* [NiMv1 / spring-boot-starter-idempotency](https://github.com/NiMv1/spring-boot-starter-idempotency): Implementação extensível baseada em Programação Orientada a Aspectos (AOP) interceptando chamadas HTTP via anotações em Java. Permite entender como criar componentes reutilizáveis acoplados ao Redis via expressões SpEL.
+* [davidgracemann / FlossPay](https://github.com/davidgracemann/FlossPay): Sistema financeiro robusto com foco em livros-razão imutáveis (ledger), auditoria ponta a ponta e barramento de ataques de repetição (replay attacks). Excelente para observar o funcionamento assíncrono baseado em Redis Streams e trilhas de auditoria protegidas por hashes.
+* [adyen-examples / adyen-step-by-step-integration-workshop](https://github.com/adyen-examples/adyen-step-by-step-integration-workshop): Workshop oficial de integração contendo o tratamento correto para fluxos de pagamento, tratamento de webhooks e autenticação 3D Secure. Essencial para aprender o fluxo ponta a ponta que conecta o frontend aos contratos da API do backend.
+* [api-evangelist / agent-readiness](https://github.com/api-evangelist/agent-readiness): Esquemas de auditoria e tempos operacionais de retenção de dados aplicados pelas maiores empresas do mercado global. Importante para avaliar métricas de disponibilidade e estratégias de conformidade corporativa.
+* bacen / pix-api: Repositório contendo as especificações OpenAPI 3.0 oficiais do ecossistema Pix do Banco Central do Brasil. Essencial para analisar o design de endpoints reais nacionais de cobranças e recepção de pagamentos instantâneos.
+* Banco Central do Brasil - Manual de Padrões para Iniciação do Pix: Documentação técnica complementar do Bacen focada nas regras de experiência do usuário, fluxos de iniciação e comunicação entre participantes. Crucial para entender os requisitos obrigatórios e regulatórios do arranjo nacional.
 
 ------------------------------
-Se desejar continuar evoluindo o projeto, informe se quer:
+## Referências de Apoio à Linguagem e Ecossistema Java
 
-* Criar a estrutura de diretórios (/cmd, /internal, /pkg) em Golang
-* Desenvolver o Dockerfile muti-stage da aplicação Spring Boot
-
-
+* [InfoQ - Destaque do recurso Java: Classes Seladas](https://www.infoq.com/br/articles/java-sealed-classes/): Artigo escrito por Brian Goetz abordando o funcionamento conceitual e prático de Sealed Classes no Java. Recomendado para aprender como controlar hierarquias de herança e implementar modelagem de domínios robustos e exaustivos combinados com Records.
+* getcaramelo.dev: Blog técnico especializado em conteúdos práticos sobre o ecossistema Java, Quarkus, Spring Boot, JPA e IA. Ótimo para se aprofundar em boas práticas de programação back-end moderna, imutabilidade de dados e otimização de consultas ao banco de dados.
